@@ -2,17 +2,18 @@ package com.study.shy.mvp_demo.http;
 
 import android.util.Log;
 
-import com.study.shy.mvp_demo.http.api.CommonResult;
+import com.study.shy.mvp_demo.bean.AcgImg;
 import com.study.shy.mvp_demo.http.api.ServiceApi;
 import com.study.shy.mvp_demo.http.callback.ApiServiceMethodCallBack;
-import com.study.shy.mvp_demo.http.excpetion.ApiException;
+
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.annotations.NonNull;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
+import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -29,6 +30,7 @@ public class HttpManager {
      * @return 返回当前实例
      */
     public static HttpManager getInstance(String url) {
+        Log.e("流程","HttpManager获取实例");
         if (null == instancce) {
             synchronized (HttpManager.class) {
                 if (null == instancce) {
@@ -40,6 +42,18 @@ public class HttpManager {
     }
 
     public HttpManager(String url) {
+
+        Log.e("流程","HttpManager构造器");
+
+        /**
+         * 初始化 okhttp
+         */
+/*        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .connectTimeout(1, TimeUnit.MINUTES)
+                .writeTimeout(1, TimeUnit.MINUTES)
+                .readTimeout(1, TimeUnit.MINUTES)
+                //.addInterceptor(new CommonInterceptor())
+                .build();*/
         /**
          * 初始化 retrofit
          */
@@ -50,6 +64,7 @@ public class HttpManager {
                 .addConverterFactory(GsonConverterFactory.create())
                 //rxjava2
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+//                .client(okHttpClient)
                 .build();
         mServiceApi = mRetrofit.create(ServiceApi.class);
     }
@@ -60,24 +75,17 @@ public class HttpManager {
      * @param s
      * @param <T>
      */
-    private <T> void toSubscribe(Observable<CommonResult<T>> o, Observer<T> s) {
-                o
+    private <T> void toSubscribe(Observable<T> o, Observer<T> s) {
+        Log.e("流程","HttpManager-->toSubscribe");
+
+        o
                 /**文件操作，网络操作等 子线程**/
                 .subscribeOn(Schedulers.io())
                 /**map 观察者按照提供的方法执行**/
-                .map(new Function<CommonResult<T>, T>() {
+                .map(new Function<T, T>() {
                     @Override
-                    public T apply(@NonNull CommonResult<T> t) {
-                        Log.e("返回结果--->", t.toString());
-                        if (t.isSuccess()) {//请求成功的返回
-                            if (null == t.getResult()) {
-                                //返回数据为null的情况
-                                throw new ApiException(t.getError().getMessage());
-                            }
-                            return t.getResult();
-                        } else {//请求失败
-                            throw new ApiException(t.getError().getMessage());
-                        }
+                    public T apply(T t) throws Exception {
+                        return t;
                     }
                 })
                 .unsubscribeOn(Schedulers.io())
@@ -89,12 +97,13 @@ public class HttpManager {
 
     /**
      * 公共的外部调用请求的方法
+     * @param <T>
      * @param subscriber 观察者
      * @param callBack   回调
-     * @param <T>
      */
-    public <T> void HttpManagerRequest(Observer<CommonResult<T>> subscriber, ApiServiceMethodCallBack<CommonResult<T>> callBack) {
+    public <T> void HttpManagerRequest(Observer<T> subscriber, ApiServiceMethodCallBack<T> callBack) {
         try {
+            Log.e("流程","HttpManager-->HttpManagerRequest");
             toSubscribe(callBack.createObservable(mServiceApi), subscriber);
         } catch (Exception e) {
             e.printStackTrace();

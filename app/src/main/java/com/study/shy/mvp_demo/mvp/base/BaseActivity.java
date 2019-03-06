@@ -1,10 +1,13 @@
 package com.study.shy.mvp_demo.mvp.base;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
+import com.study.shy.mvp_demo.R;
+import com.study.shy.mvp_demo.mvp.LoadingDialog;
 import com.study.shy.mvp_demo.mvp.base.presenter.MvpPresenter;
 import com.study.shy.mvp_demo.mvp.base.view.MvpBaseView;
 import com.study.shy.mvp_demo.mvp.base.view.MvpView;
@@ -17,6 +20,7 @@ public abstract class BaseActivity<V extends MvpView, P extends MvpPresenter<V>>
     private P presenter;
     private V view;
     public String TAG = "";
+    LoadingDialog loadingDialog;
     //当前Activity的实例
     static private BaseActivity currentActivity;
 
@@ -29,8 +33,8 @@ public abstract class BaseActivity<V extends MvpView, P extends MvpPresenter<V>>
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState, @Nullable PersistableBundle persistentState) {
-        super.onCreate(savedInstanceState, persistentState);
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         int layoutResID = setLayoutId();
         setContentView(layoutResID);
         //黄油刀
@@ -100,13 +104,25 @@ public abstract class BaseActivity<V extends MvpView, P extends MvpPresenter<V>>
         dismisProgressDialog();
     }
 
+    /**
+     * 获取当前Activity的实例
+     *
+     * @return
+     */
+    public static Activity getCurrentActivty() {
+        return currentActivity;
+    }
+
     @Override
     public void showProgressDialog() {
-
+        loadingDialog = new LoadingDialog(currentActivity,R.style.ConfigDialog);
+        loadingDialog.show();
     }
 
     @Override
     public void dismisProgressDialog() {
-
+        if (null != loadingDialog){
+            loadingDialog.dismiss();
+        }
     }
 }
